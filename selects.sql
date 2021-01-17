@@ -2,8 +2,8 @@
 create or replace function current_exhibitions_by_city(city_id_p int)
     returns table
             (
-                exhibition_name varchar,
-                address         varchar
+                exhibition_name varchar(200),
+                address         varchar(200)
             )
     language sql
 as
@@ -25,8 +25,8 @@ create or replace function owners_of_exhibition_parts(exhibition_id_p int)
             (
                 id    int,
                 name  varchar(200),
-                email varchar(200),
-                phone varchar(200)
+                email varchar(300),
+                phone varchar(20)
             )
     language sql
 as
@@ -55,8 +55,8 @@ create or replace function museum_by_branch(branch_id_p int)
     returns table
             (
                 id          int,
-                name        varchar,
-                description varchar
+                name        varchar(200),
+                description text
             )
     language sql
 as
@@ -73,9 +73,9 @@ create or replace function branches_by_museum(museum_id_p int)
     returns table
             (
                 id          int,
-                name        varchar,
-                place       varchar,
-                description varchar
+                name        varchar(200),
+                place       varchar(50),
+                description text
             )
     language sql
 as
@@ -86,11 +86,11 @@ where b.musem_id = museum_id_p
 $$;
 
 --branch by city
-create or replace function current_exhibitions_by_city(city_id_p int)
+create or replace function branch_by_city(city_id_p int)
     returns table
             (
-                branch_name varchar,
-                address     varchar
+                branch_name varchar(200),
+                address     varchar(50)
             )
     language sql
 as
@@ -106,7 +106,7 @@ create or replace function city_of_branch(branch_id_p int)
     returns table
             (
                 id   int,
-                name varchar
+                name varchar(200)
             )
     language sql
 as
@@ -123,9 +123,9 @@ create or replace function branch_of_exhibition(exhibition_id_p int)
     returns table
             (
                 id          int,
-                place       varchar,
-                name        varchar,
-                description varchar
+                place       varchar(50),
+                name        varchar(200),
+                description text
             )
     language sql
 as
@@ -141,10 +141,10 @@ create or replace function exhibits_from_exhibition(exhibition_id_p int)
     returns table
             (
                 id          int,
-                name        varchar,
-                type        varchar,
-                description varchar,
-                date        varchar
+                name        varchar(200),
+                type        varchar(50),
+                description text,
+                date        varchar(50)
             )
     language sql
 as
@@ -160,9 +160,9 @@ create or replace function organizers_of_exhibition(exhibition_id_p int)
     returns table
             (
                 id          int,
-                first_name  varchar,
-                second_name varchar,
-                post        varchar
+                first_name  varchar(100),
+                second_name varchar(100),
+                post        varchar(200)
             )
     language sql
 as
@@ -179,7 +179,7 @@ create or replace function organizers_works(organizer_id_p int)
     returns table
             (
                 id   int,
-                name varchar
+                name varchar(200)
             )
     language sql
 as
@@ -197,10 +197,10 @@ create or replace function authors_of_exhibition(exhibit_id_p int)
     returns table
             (
                 id          int,
-                first_name  varchar,
-                second_name varchar,
+                first_name  varchar(100),
+                second_name varchar(100),
                 biography   text,
-                country     varchar
+                country     varchar(70)
             )
     language sql
 as
@@ -217,10 +217,10 @@ create or replace function exhibit_by_author(author_id_p int)
     returns table
             (
                 id          int,
-                name        varchar,
+                name        varchar(200),
                 description text,
-                type        varchar,
-                date        date
+                type        varchar(50),
+                date        varchar(50)
             )
     language sql
 as
@@ -232,14 +232,14 @@ where ea.author_id = author_id_p
 $$;
 
 --exhibit by owner
-create or replace function exhibit_by_author(owner_id_p int)
+create or replace function exhibit_by_owner(owner_id_p int)
     returns table
             (
                 id          int,
-                name        varchar,
+                name        varchar(200),
                 description text,
-                type        varchar,
-                date        date
+                type        varchar(50),
+                date        varchar(50)
             )
     language sql
 as

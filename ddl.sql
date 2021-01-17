@@ -78,8 +78,9 @@ create table exhibition_branch
     start_date    date,
     finish_date   date,
     constraint exhibition_branch_pk primary key (branch_id, exhibition_id),
-    constraint exhibition_branch_exhibition_fk foreign key (exhibition_id) references exhibitions (id),
-    constraint exhibition_branch_branch_fk foreign key (branch_id) references branches (id)
+    constraint exhibition_branch_exhibition_fk foreign key (exhibition_id) references exhibitions (id) on delete cascade ,
+    constraint exhibition_branch_branch_fk foreign key (branch_id) references branches (id),
+    constraint date_range check ( (start_date is null and finish_date is null) or (start_date <= finish_date) )
 );
 
 create table exhibition_organizer
@@ -88,7 +89,7 @@ create table exhibition_organizer
     organizer_id  int          not null,
     post          varchar(200) not null,
     constraint exhibition_organizer_pk primary key (organizer_id, exhibition_id),
-    constraint exhibition_organizer_exhibition_fk foreign key (exhibition_id) references exhibitions (id),
+    constraint exhibition_organizer_exhibition_fk foreign key (exhibition_id) references exhibitions (id) on delete cascade ,
     constraint exhibition_organizer_organizer_fk foreign key (organizer_id) references organizers (id)
 );
 
@@ -118,7 +119,7 @@ create table exhibition_exhibit
     exhibition_id int not null,
     constraint exhibit_exhibit_pk primary key (exhibition_id, exhibit_id),
     constraint exhibit_exhibit_exhibit_fk foreign key (exhibit_id) references exhibits (id),
-    constraint exhibit_exhibit_exhibition_fk foreign key (exhibition_id) references exhibitions (id)
+    constraint exhibit_exhibit_exhibition_fk foreign key (exhibition_id) references exhibitions (id) on delete cascade
 );
 
 --index for queries "current exhibitions by city"; "branch by city" (because of postgres doesn't make automatically index for fk)
@@ -140,4 +141,5 @@ create index on branches using hash (musem_id);
 --covering index for "authors of exhibit"
 create unique index on exhibit_author using btree (exhibit_id, author_id);
 
+--other selects are not so frequent, so it is expensive to make indexes
 
