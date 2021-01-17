@@ -10,7 +10,7 @@ create table cities
 (
     id   int          not null,
     name varchar(200) not null,
-    constraint city_pk primary key(id)
+    constraint city_pk primary key (id)
 );
 
 create table branches
@@ -20,7 +20,7 @@ create table branches
     name        varchar(200) not null,
     description text,
     musem_id    int          not null,
-    city_id    int          not null,
+    city_id     int          not null,
     constraint branch_pk primary key (id),
     constraint branch_museum_fk foreign key (musem_id) references museums (id),
     constraint branch_city_fk foreign key (city_id) references cities (id)
@@ -29,10 +29,8 @@ create table branches
 
 create table exhibitions
 (
-    id          int          not null,
-    name        varchar(200) not null,
-    start_date  date,
-    finish_date date,
+    id   int          not null,
+    name varchar(200) not null,
     constraint exhibition_pk primary key (id)
 );
 
@@ -77,6 +75,8 @@ create table exhibition_branch
 (
     branch_id     int not null,
     exhibition_id int not null,
+    start_date    date,
+    finish_date   date,
     constraint exhibition_branch_pk primary key (branch_id, exhibition_id),
     constraint exhibition_branch_exhibition_fk foreign key (exhibition_id) references exhibitions (id),
     constraint exhibition_branch_branch_fk foreign key (branch_id) references branches (id)
@@ -120,3 +120,24 @@ create table exhibition_exhibit
     constraint exhibit_exhibit_exhibit_fk foreign key (exhibit_id) references exhibits (id),
     constraint exhibit_exhibit_exhibition_fk foreign key (exhibition_id) references exhibitions (id)
 );
+
+--index for queries "current exhibitions by city"; "branch by city" (because of postgres doesn't make automatically index for fk)
+--each city contains not too much museums branches. This index have middle or good selectiveness, I think
+create index on branches using hash (city_id);
+
+--index for query "current exhibitions by city"
+--date easiest for ordering and have small range;
+--covering branch_id decrease drive request
+create index on exhibition_branch using btree (start_date, finish_date, branch_id);
+
+--covering index for "count exhibits on exhibitions"
+--typically count of exhibits < 100, therefore, covering index does not increase the cost much, but it gives enough data
+create unique index on exhibition_exhibit using btree (exhibition_id, exhibit_id);
+
+--index for query "branches by museum". It is like a index for city
+create index on branches using hash (musem_id);
+
+--covering index for "authors of exhibit"
+create unique index on exhibit_author using btree (exhibit_id, author_id);
+
+

@@ -1,30 +1,23 @@
---current exhibitions
-select e.name, b.place
-from exhibitions e
-         join exhibition_branch on e.id = exhibition_branch.exhibition_id
-         join branches b on exhibition_branch.branch_id = b.id
-where (e.start_date is null and e.finish_date is null)
-   or (e.start_date <= now() and e.finish_date > now());
-
-
---exhibits from exhibition
-create or replace function exhibits_from_exhibition(exhibition_id_p int)
+--current exhibitions by city
+create or replace function current_exhibitions_by_city(city_id_p int)
     returns table
             (
-                id          int,
-                name        varchar,
-                type        varchar,
-                description varchar,
-                date        varchar
+                exhibition_name varchar,
+                address         varchar
             )
     language sql
 as
 $$
-select e.id, e.name, e.type, e.description, e.date
-from exhibits e
-         join exhibition_exhibit ee on e.id = ee.exhibit_id
-where ee.exhibition_id = exhibition_id_p
+select e.name, b.place
+from exhibitions e
+         join exhibition_branch eb on e.id = eb.exhibition_id
+         join branches b on eb.branch_id = b.id
+where b.city_id = city_id_p
+  and ((eb.start_date is null and eb.finish_date is null)
+    or (eb.start_date <= now() and eb.finish_date > now()))
 $$;
+
+
 
 --owners of exhibition parts
 create or replace function owners_of_exhibition_parts(exhibition_id_p int)
@@ -46,6 +39,35 @@ from owners o
 where ee.exhibition_id = exhibition_id_p
 $$;
 
+--count exhibits on exhibitions
+create or replace function count_exhibits_on_exhibition(exhibition_id_p int)
+    returns int
+    language sql
+as
+$$
+select count(*)
+from exhibition_exhibit
+where exhibition_id = exhibition_id_p
+$$;
+
+--museum by branch
+create or replace function museum_by_branch(branch_id_p int)
+    returns table
+            (
+                id          int,
+                name        varchar,
+                description varchar
+            )
+    language sql
+as
+$$
+select m.id, m.name, m.description
+from museums m
+         join branches b on m.id = b.musem_id
+where b.id = branch_id_p
+$$;
+
+
 --branches by museum
 create or replace function branches_by_museum(museum_id_p int)
     returns table
@@ -63,14 +85,169 @@ from branches b
 where b.musem_id = museum_id_p
 $$;
 
---count exhibits on exhibitions
-create or replace function count_exhibits_on_exhibition(exhibition_id_p int)
-    returns int
+--branch by city
+create or replace function current_exhibitions_by_city(city_id_p int)
+    returns table
+            (
+                branch_name varchar,
+                address     varchar
+            )
     language sql
 as
 $$
-select count(*)
-from exhibition_exhibit
-where exhibition_id = exhibition_id_p
+select b.name, b.place
+from branches b
+where b.city_id = city_id_p
+$$;
 
+
+--city of branch
+create or replace function city_of_branch(branch_id_p int)
+    returns table
+            (
+                id   int,
+                name varchar
+            )
+    language sql
+as
 $$
+select c.id, c.name
+from cities c
+         join branches b on c.id = b.city_id
+where b.id = branch_id_p
+$$;
+
+
+--branch of exhibition
+create or replace function branch_of_exhibition(exhibition_id_p int)
+    returns table
+            (
+                id          int,
+                place       varchar,
+                name        varchar,
+                description varchar
+            )
+    language sql
+as
+$$
+select b.id, b.place, b.name, b.description
+from branches b
+         join exhibition_branch eb on b.id = eb.branch_id
+where eb.exhibition_id = exhibition_id_p
+$$;
+
+--exhibits from exhibition
+create or replace function exhibits_from_exhibition(exhibition_id_p int)
+    returns table
+            (
+                id          int,
+                name        varchar,
+                type        varchar,
+                description varchar,
+                date        varchar
+            )
+    language sql
+as
+$$
+select e.id, e.name, e.type, e.description, e.date
+from exhibits e
+         join exhibition_exhibit ee on e.id = ee.exhibit_id
+where ee.exhibition_id = exhibition_id_p
+$$;
+
+--organizers of exhibition
+create or replace function organizers_of_exhibition(exhibition_id_p int)
+    returns table
+            (
+                id          int,
+                first_name  varchar,
+                second_name varchar,
+                post        varchar
+            )
+    language sql
+as
+$$
+select o.id, o.first_name, o.second_name, eo.post
+from organizers o
+         join exhibition_organizer eo on o.id = eo.organizer_id
+where eo.exhibition_id = exhibition_id_p
+$$;
+
+
+--organizer works
+create or replace function organizers_works(organizer_id_p int)
+    returns table
+            (
+                id   int,
+                name varchar
+            )
+    language sql
+as
+$$
+select e.id, e.name
+from exhibitions e
+         join exhibition_organizer ee on e.id = ee.exhibition_id
+where ee.organizer_id = organizer_id_p
+$$;
+
+
+
+--authors of exhibit
+create or replace function authors_of_exhibition(exhibit_id_p int)
+    returns table
+            (
+                id          int,
+                first_name  varchar,
+                second_name varchar,
+                biography   text,
+                country     varchar
+            )
+    language sql
+as
+$$
+select a.id, a.first_name, a.second_name, a.biography, a.country
+from authors a
+         join exhibit_author ea on a.id = ea.author_id
+where ea.exhibit_id = exhibit_id_p
+$$;
+
+
+--exhibit by author
+create or replace function exhibit_by_author(author_id_p int)
+    returns table
+            (
+                id          int,
+                name        varchar,
+                description text,
+                type        varchar,
+                date        date
+            )
+    language sql
+as
+$$
+select e.id, e.name, e.description, e.type, e.date
+from exhibits e
+         join exhibit_author ea on e.id = ea.exhibit_id
+where ea.author_id = author_id_p
+$$;
+
+--exhibit by owner
+create or replace function exhibit_by_author(owner_id_p int)
+    returns table
+            (
+                id          int,
+                name        varchar,
+                description text,
+                type        varchar,
+                date        date
+            )
+    language sql
+as
+$$
+select e.id, e.name, e.description, e.type, e.date
+from exhibits e
+         join exhibit_owner eo on e.id = eo.exhibit_id
+where eo.owner_id = owner_id_p
+$$;
+
+
