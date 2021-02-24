@@ -169,7 +169,10 @@ create or replace procedure add_exhibit_to_exhibition(in exhibit_id_p int, exhib
 as
 $$
 begin
-    execute check_exhibition_exist(exhibition_id_p);
+    if not exists(select * from exhibitions where exhibitions.id = exhibition_id_p)
+    then
+        rollback;
+    end if;
     insert into exhibition_exhibit (exhibit_id, exhibition_id)
     values (exhibit_id_p, exhibition_id_p);
 end;
@@ -183,7 +186,10 @@ create or replace procedure add_organizer_to_exhibition(in organizer_id_p int, e
 as
 $$
 begin
-    execute check_exhibition_exist(exhibition_id_p);
+    if not exists(select * from exhibitions where exhibitions.id = exhibition_id_p)
+    then
+        rollback;
+    end if;
     insert into exhibition_organizer (organizer_id, exhibition_id, post)
     values (organizer_id_p, exhibition_id_p, post_p);
 end;
@@ -200,8 +206,16 @@ create or replace procedure add_exhibition_to_branch(in branch_id_p int, exhibit
 as
 $$
 begin
-    execute check_exhibition_exist(exhibition_id_p);
-    execute check_date(start_date_p, finish_date_p);
+    if not exists(select * from exhibitions where exhibitions.id = exhibition_id_p)
+    then
+        rollback;
+    end if;
+    if (start_date_p is null and finish_date_p is not null) or
+       (start_date_p is not null and finish_date_p is null) or
+       (start_date_p is not null and finish_date_p is not null and start_date_p > finish_date_p)
+    then
+        rollback;
+    end if;
     insert into exhibition_branch (branch_id, exhibition_id, start_date, finish_date)
     values (branch_id_p, exhibition_id_p, start_date_p, finish_date_p);
 end;
@@ -214,7 +228,10 @@ create or replace procedure update_post(in organizer_id_p int, in exhibition_id_
 as
 $$
 begin
-    execute check_exhibition_exist(exhibition_id_p);
+    if not exists(select * from exhibitions where exhibitions.id = exhibition_id_p)
+    then
+        rollback;
+    end if;
     update exhibition_organizer eo
     set post = new_post
     where eo.organizer_id = organizer_id_p
@@ -230,8 +247,18 @@ create or replace procedure update_exhibition_date(in branch_id_p int, in exhibi
 as
 $$
 begin
-    execute check_exhibition_exist(exhibition_id_p);
-    execute check_date(start_date_p, finish_date_p);
+    if not exists(select * from exhibitions where exhibitions.id = exhibition_id_p)
+    then
+        rollback;
+    end if;
+
+    if (start_date_p is null and finish_date_p is not null) or
+       (start_date_p is not null and finish_date_p is null) or
+       (start_date_p is not null and finish_date_p is not null and start_date_p > finish_date_p)
+    then
+        rollback;
+    end if;
+
     update exhibition_branch eb
     set start_date  = start_date_p,
         finish_date = finish_date_p
@@ -247,14 +274,14 @@ create or replace procedure remove_temporary_exhibition(in exhibition_id_p int)
 as
 $$
 declare
-    start_date_v  int;
-    finish_date_v int;
+    start_date_v  date;
+    finish_date_v date;
 begin
-    select start_date, finish_date
+    select eb.start_date, eb.finish_date
     into start_date_v, finish_date_v
-    from exhibition_branch
-    where exhibition_id = exhibition_id_p;
-    if start_date_v is not null and finish_date_v is not null
+    from exhibition_branch eb
+    where eb.exhibition_id = exhibition_id_p;
+    if start_date_v is null or finish_date_v is null
     then
         rollback;
     end if;
@@ -263,30 +290,3 @@ end;
 $$;
 
 --during normal operation, data from other tables should not be removed
-
---check_exhibition_exist
-create or replace procedure check_exhibition_exist(in exhibition_id_p int)
-    language plpgsql
-as
-$$
-begin
-    if not exists(select * from exhibitions where exhibitions.id = exhibition_id_p)
-    then
-        rollback;
-    end if;
-end ;
-$$;
-
---check_exhibition_exist
-create or replace procedure check_date(in start_date date, in finish_date date)
-    language plpgsql
-as
-$$
-begin
-    if (start_date is null != finish_date is null) or
-       (start_date is not null and finish_date is not null and start_date > finish_date)
-    then
-        rollback;
-    end if;
-end ;
-$$;

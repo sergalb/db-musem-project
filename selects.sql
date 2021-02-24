@@ -251,3 +251,11 @@ where eo.owner_id = owner_id_p
 $$;
 
 
+
+select branches.id
+from branches join exhibition_branch eb on branches.id = eb.branch_id
+where musem_id = 1 and
+ (eb.start_date is null or (eb.finish_date > (now() - interval '1 years') and eb.start_date > now()))
+group by branches.id
+order by count(*)
+limit 10

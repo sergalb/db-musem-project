@@ -69,7 +69,9 @@ create table owners
     contact_number varchar(20),
     contact_email  varchar(300),
     constraint owner_pk primary key (id)
+
 );
+
 
 create table exhibition_branch
 (
